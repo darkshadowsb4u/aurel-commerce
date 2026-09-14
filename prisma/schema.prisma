@@ -1,0 +1,118 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  role         String         @default("patron")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  addresses    Address[]
+  orders       Order[]
+  wishlist     WishlistItem[]
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName   String
+  lastName    String
+  company     String?
+  address1    String
+  address2    String?
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  subtitle         String
+  description      String
+  price            Float
+  compareAtPrice   Float?
+  category         String
+  categorySlug     String
+  collection       String?
+  collectionSlug   String?
+  materials        String   // JSON array
+  dimensions       String   // JSON object
+  specifications   String   // JSON object
+  inStock          Boolean  @default(true)
+  stockCount       Int      @default(10)
+  rating           Float    @default(5.0)
+  reviewCount      Int      @default(0)
+  isNew            Boolean  @default(false)
+  isBestSeller     Boolean  @default(false)
+  isLimitedEdition Boolean  @default(false)
+  editionNumber    Int?
+  editionTotal     Int?
+  images           String   // JSON array
+  variants         String   // JSON array
+  editorialBlurb   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerEmail     String
+  subtotal          Float
+  discount          Float       @default(0)
+  shippingCost      Float       @default(0)
+  tax               Float       @default(0)
+  total             Float
+  status            String      @default("confirmed")
+  paymentStatus     String      @default("paid")
+  paymentMethod     String      @default("credit_card")
+  paymentId         String?
+  carrier           String?
+  trackingNumber    String?
+  estimatedDelivery String?
+  shippingAddress   String      // JSON string
+  billingAddress    String      // JSON string
+  items             OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  productSlug String
+  name        String
+  price       Float
+  quantity    Int
+  variantName String?
+  image       String
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
